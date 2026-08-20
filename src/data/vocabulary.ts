@@ -1,4 +1,4 @@
-export interface VocabularyItem {
+export interface VocabItem {
   id: string;
   korean: string;
   hanja?: string;
@@ -10,7 +10,20 @@ export interface VocabularyItem {
   level?: string;
 }
 
-export const INITIAL_VOCABULARY: VocabularyItem[] = [
+export type VocabularyItem = VocabItem;
+
+export const VOCAB_CATEGORIES = [
+  'All Lists',
+  'TOPIK Beginner',
+  'TOPIK Intermediate',
+  'TOPIK Advanced',
+  'Yonsei Vocab',
+  'SNU Vocab',
+  'K-POP Vocab',
+  'Daily Vocab'
+];
+
+export const VOCABULARY_LIST: VocabItem[] = [
   // Daily Vocab
   {
     id: 'd1',
@@ -150,3 +163,6 @@ export const INITIAL_VOCABULARY: VocabularyItem[] = [
     exampleTranslation: '实力进步了很多。'
   }
 ];
+
+// 同时导出 INITIAL_VOCABULARY 供 App.tsx 使用
+export const INITIAL_VOCABULARY = VOCABULARY_LIST;
