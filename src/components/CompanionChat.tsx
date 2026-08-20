@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Companion, ChatMessage, VocabItem, GrammarPointItem, CompanionSparkRecord } from '../types';
-import { speakKorean, stopSpeaking, Users } from '../utils/audio';
+import { speakKorean, stopSpeaking } from '../utils/audio';
 
 interface CompanionChatProps {
   theme?: 'default' | 'kkt';
