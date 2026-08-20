@@ -1,0 +1,68 @@
+/* 全局字体与几何基准 */
+:root {
+  --font-wechat: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  --card-radius: 6px;
+  --bubble-radius: 4px;
+}
+
+body {
+  font-family: var(--font-wechat);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 5 款预设主题色板 */
+[data-theme="wechat"] {
+  --bg-primary: #EDEDED;
+  --bg-card: #FFFFFF;
+  --bubble-sent: #95EC69;
+  --bubble-received: #FFFFFF;
+  --text-main: #191919;
+  --accent-color: #07C160;
+}
+
+[data-theme="kakaotalk"] {
+  --bg-primary: #BACEE0;
+  --bg-card: #FFFFFF;
+  --bubble-sent: #FEE500;
+  --bubble-received: #FFFFFF;
+  --text-main: #1E1E1E;
+  --accent-color: #3C1E1E;
+}
+
+[data-theme="bubble"] {
+  --bg-primary: #F4F4F8;
+  --bg-card: #FFFFFF;
+  --bubble-sent: #8E7CFF;
+  --bubble-received: #EAE8FC;
+  --text-main: #232232;
+  --accent-color: #8E7CFF;
+}
+
+[data-theme="midnight"] {
+  --bg-primary: #000000;
+  --bg-card: #14171F;
+  --bubble-sent: #1F2430;
+  --bubble-received: #12141A;
+  --text-main: #E5E9F0;
+  --accent-color: #3E4B5E;
+}
+
+[data-theme="paper"] {
+  --bg-primary: #F7F6F2;
+  --bg-card: #EFECE6;
+  --bubble-sent: #E3E0D8;
+  --bubble-received: #FFFFFF;
+  --text-main: #33322E;
+  --accent-color: #8C857B;
+}
+
+/* 几何圆角约束 */
+.app-card {
+  border-radius: var(--card-radius);
+}
+
+.chat-bubble {
+  border-radius: var(--bubble-radius);
+}
