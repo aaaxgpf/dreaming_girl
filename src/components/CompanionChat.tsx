@@ -22,7 +22,8 @@ import {
   CheckCircle2,
   Zap,
   Plus,
-  Users
+  Users,
+  MoreVertical
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Companion, ChatMessage, VocabItem, GrammarPointItem, CompanionSparkRecord } from '../types';
