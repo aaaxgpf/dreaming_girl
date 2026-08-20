@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, BookOpen, Settings, user } from 'lucide-react';
+import { MessageSquare, BookOpen, Settings, Users } from 'lucide-react';
 import { Companion } from '../types';
 
 interface Props {
