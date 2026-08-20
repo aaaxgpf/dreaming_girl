@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { PERSONAS, Persona } from '../constants/personas';
+import { PERSONAS, Persona, DEFAULT_PERSONA } from '../constants/personas';
 import { X, ChevronLeft, ChevronRight, Volume2, Check, Sparkles } from 'lucide-react';
 
 interface CompanionSelectModalProps {
   isOpen: boolean;
-  currentPersonaId: string;
+  currentPersonaId?: string;
   onSelectPersona: (persona: Persona) => void;
   onClose: () => void;
 }
@@ -16,24 +16,28 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
   onClose
 }) => {
   const [currentIndex, setCurrentIndex] = useState(() => {
-    const idx = PERSONAS.findIndex((p) => p.id === currentPersonaId);
+    const list = Array.isArray(PERSONAS) && PERSONAS.length > 0 ? PERSONAS : [DEFAULT_PERSONA];
+    const idx = list.findIndex((p) => p.id === currentPersonaId);
     return idx >= 0 ? idx : 0;
   });
 
   if (!isOpen) return null;
 
-  const currentPersona = PERSONAS[currentIndex];
+  const safeList = Array.isArray(PERSONAS) && PERSONAS.length > 0 ? PERSONAS : [DEFAULT_PERSONA];
+  // 确保索引越界时安全回退
+  const safeIndex = (currentIndex >= 0 && currentIndex < safeList.length) ? currentIndex : 0;
+  const currentPersona = safeList[safeIndex] || DEFAULT_PERSONA;
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : PERSONAS.length - 1));
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : safeList.length - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev < PERSONAS.length - 1 ? prev + 1 : 0));
+    setCurrentIndex((prev) => (prev < safeList.length - 1 ? prev + 1 : 0));
   };
 
-  const playVoiceSample = (greeting: string) => {
-    const pureKorean = greeting.replace(/\([^)]*\)/g, '').trim();
+  const playVoiceSample = (greetingText?: string) => {
+    const pureKorean = (greetingText || '').replace(/\([^)]*\)/g, '').trim();
     if ('speechSynthesis' in window && pureKorean) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(pureKorean);
@@ -42,6 +46,12 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
       window.speechSynthesis.speak(utterance);
     }
   };
+
+  const avatarSrc = currentPersona?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+  const displayTitle = currentPersona?.title || currentPersona?.name || '伴聊伙伴';
+  const displayTagline = currentPersona?.tagline || 'AI 伴聊角色';
+  const displayGreeting = currentPersona?.greeting || '안녕하세요! (你好！)';
+  const koreanName = currentPersona?.koreanName || '친구';
 
   return (
     <div
@@ -69,12 +79,12 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 顶部标题与关闭 */}
+        {/* 顶部标题栏 */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={18} color="var(--accent-color)" />
             <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: 'var(--text-main)' }}>
-              选择伴聊角色 ({currentIndex + 1}/{PERSONAS.length})
+              选择伴聊角色 ({safeIndex + 1}/{safeList.length})
             </h3>
           </div>
           <button
@@ -87,7 +97,7 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
 
         {/* 轮播主体区 */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          {/* 左切换箭头 */}
+          {/* 左切换按钮 */}
           <button
             onClick={handlePrev}
             style={{
@@ -122,8 +132,11 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
             }}
           >
             <img
-              src={currentPersona.avatar}
-              alt={currentPersona.name}
+              src={avatarSrc}
+              alt={displayTitle}
+              onError={(e) => {
+                (e.target as HTMLElement).style.opacity = '0.5';
+              }}
               style={{
                 width: '90px',
                 height: '90px',
@@ -134,10 +147,10 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
               }}
             />
             <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: 600, color: 'var(--text-main)' }}>
-              {currentPersona.title}
+              {displayTitle}
             </h4>
             <p style={{ margin: '0 0 12px 0', fontSize: '12px', opacity: 0.7, color: 'var(--text-main)' }}>
-              {currentPersona.tagline}
+              {displayTagline}
             </p>
 
             <div
@@ -152,11 +165,11 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
                 marginBottom: '12px'
               }}
             >
-              {currentPersona.greeting}
+              {displayGreeting}
             </div>
 
             <button
-              onClick={() => playVoiceSample(currentPersona.greeting)}
+              onClick={() => playVoiceSample(displayGreeting)}
               style={{
                 background: 'none',
                 border: '1px solid var(--border-color)',
@@ -174,7 +187,7 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
             </button>
           </div>
 
-          {/* 右切换箭头 */}
+          {/* 右切换按钮 */}
           <button
             onClick={handleNext}
             style={{
@@ -198,7 +211,7 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
           </button>
         </div>
 
-        {/* 底部确认选择按钮 */}
+        {/* 确认选择按钮 */}
         <div style={{ marginTop: '16px' }}>
           <button
             onClick={() => {
@@ -222,7 +235,7 @@ export const CompanionSelectModal: React.FC<CompanionSelectModalProps> = ({
             }}
           >
             <Check size={16} />
-            <span>确认与 {currentPersona.koreanName} 对话</span>
+            <span>确认与 {koreanName} 对话</span>
           </button>
         </div>
       </div>
