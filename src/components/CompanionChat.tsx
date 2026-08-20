@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Persona } from '../constants/personas';
+import { Persona, DEFAULT_PERSONA } from '../constants/personas';
 import { sendChatMessageToGemini } from '../services/gemini';
-import { Send, Volume2, ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
+import { Send, Volume2, ArrowLeft, RefreshCw, Sparkles, User } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -11,41 +11,45 @@ interface ChatMessage {
 }
 
 interface CompanionChatProps {
-  persona: Persona;
+  persona?: Persona | null;
   onBack: () => void;
   onOpenSelectModal: () => void;
 }
 
 export const CompanionChat: React.FC<CompanionChatProps> = ({
-  persona,
+  persona: rawPersona,
   onBack,
   onOpenSelectModal
 }) => {
+  // 安全守护：若传入为空，则自动回退至默认角色，坚决不崩溃
+  const persona: Persona = rawPersona || DEFAULT_PERSONA;
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 初始化角色第一句问候
+  // 当角色切换或首次加载时，重置开场白
   useEffect(() => {
+    const greetingText = persona?.greeting || '안녕하세요! (你好！)';
     setMessages([
       {
         id: `init_${Date.now()}`,
         role: 'persona',
-        text: persona.greeting,
+        text: greetingText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ]);
-  }, [persona]);
+  }, [persona?.id]);
 
-  // 自动滚到底部
+  // 消息自动滚底
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // 播放纯韩语（正则过滤中文）
+  // 纯韩语过滤与语音合成
   const handlePlayVoice = (text: string) => {
-    const pureKorean = text.replace(/\([^)]*\)/g, '').trim();
+    const pureKorean = (text || '').replace(/\([^)]*\)/g, '').trim();
     if ('speechSynthesis' in window && pureKorean) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(pureKorean);
@@ -75,16 +79,21 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
       const personaMsg: ChatMessage = {
         id: `persona_${Date.now()}`,
         role: 'persona',
-        text: reply,
+        text: reply || '네, 그렇군요! (是的，原来是这样！)',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, personaMsg]);
     } catch (err) {
-      console.error('Chat error:', err);
+      console.error('[CompanionChat Error]', err);
     } finally {
       setIsTyping(false);
     }
   };
+
+  const avatarSrc = persona?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+  const displayName = persona?.title || persona?.name || '伴聊好友';
+  const taglineText = persona?.tagline || 'AI 伴聊角色';
+  const koreanName = persona?.koreanName || '친구';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxWidth: '720px', margin: '0 auto', width: '100%' }}>
@@ -114,14 +123,26 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
           >
             <ArrowLeft size={18} />
           </button>
-          <img
-            src={persona.avatar}
-            alt={persona.name}
-            style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
-          />
+          
+          {avatarSrc ? (
+            <img
+              src={avatarSrc}
+              alt={displayName}
+              onError={(e) => {
+                // 图片加载失败时优雅降级
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+              style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User size={18} />
+            </div>
+          )}
+
           <div>
-            <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>{persona.title}</div>
-            <div style={{ fontSize: '11px', opacity: 0.6, color: 'var(--text-main)' }}>{persona.tagline}</div>
+            <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>{displayName}</div>
+            <div style={{ fontSize: '11px', opacity: 0.6, color: 'var(--text-main)' }}>{taglineText}</div>
           </div>
         </div>
 
@@ -210,13 +231,13 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
         {isTyping && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.6, fontSize: '12px', padding: '4px 0' }}>
             <Sparkles size={14} className="animate-spin" />
-            <span>{persona.koreanName}正在输入中...</span>
+            <span>{koreanName}正在输入中...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 消息输入框 */}
+      {/* 底部输入框 */}
       <div
         style={{
           padding: '12px 16px',
@@ -231,7 +252,7 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder={`给 ${persona.koreanName} 发送韩语或中文消息...`}
+          placeholder={`给 ${koreanName} 发送消息...`}
           style={{
             flex: 1,
             padding: '10px 14px',
