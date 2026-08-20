@@ -1,81 +1,132 @@
 import React from 'react';
-import { MessageSquare, BookOpen, Settings, Users } from 'lucide-react';
-import { Companion } from '../types';
+import { Persona, DEFAULT_PERSONA } from '../constants/personas';
+import { MessageSquare, BookOpen, Users } from 'lucide-react';
 
-interface Props {
-  theme?: string;
-  hideMobileNav?: boolean;
-  activeTab: string;
-  setActiveTab: (tab: any) => void;
-  // keep remaining props optional for compatibility right now
+interface NavbarProps {
+  currentTab: 'chat' | 'flashcards';
+  onTabChange: (tab: 'chat' | 'flashcards') => void;
+  selectedPersona?: Persona | null;
+  onOpenSelectModal: () => void;
+  currentTheme: string;
+  onThemeChange: (theme: any) => void;
 }
 
-export const Navbar: React.FC<Props> = ({ activeTab, setActiveTab, hideMobileNav, theme }) => {
-  const tabs = [
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
-    { id: 'study', label: 'Study', icon: BookOpen },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ] as const;
+export const Navbar: React.FC<NavbarProps> = ({
+  currentTab,
+  onTabChange,
+  selectedPersona,
+  onOpenSelectModal,
+  currentTheme,
+  onThemeChange
+}) => {
+  const safePersona = selectedPersona || DEFAULT_PERSONA;
+  const avatarSrc = safePersona?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+  const nameText = safePersona?.koreanName || safePersona?.name || 'Buddy';
+
+  const themes = [
+    { key: 'wechat', name: 'WeChat' },
+    { key: 'kakaotalk', name: 'Kakao' },
+    { key: 'bubble', name: 'Bubble' },
+    { key: 'midnight', name: 'Midnight' },
+    { key: 'paper', name: 'Paper' }
+  ];
 
   return (
-    <>
-      <header className={`hidden md:block sticky top-0 z-30 ${theme === 'kkt' ? 'bg-[#b2c7d9]/95 border-[#9bbbd4]' : theme === 'wechat' ? 'bg-[#EDEDED]/95 border-[#D5D5D5]' : 'bg-transparent border-transparent'} backdrop-blur-md border-b text-[#2D2D2D] transition-colors`} >
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-3 cursor-pointer group select-none shrink-0" onClick={() => setActiveTab('chat')}>
-              <div className="w-10 h-10 rounded-full bg-stone-900 text-white flex items-center justify-center font-sans text-xl font-bold shadow-sm">
-                가
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="font-sans tracking-tighter text-2xl font-bold text-stone-900 leading-none">
-                  Korean <span className="font-medium italic text-stone-400">Buddy</span>
-                </span>
-              </div>
-            </div>
-            
-            <nav className="flex items-center gap-2">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-150 ${
-                      isActive 
-                        ? 'bg-stone-900 text-white shadow-md' 
-                        : 'text-stone-500 hover:text-stone-800 hover:bg-stone-100'
-                    }`}
-                  >
-                    <tab.icon size={18} className={isActive ? 'opacity-100' : 'opacity-70'} />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
+    <header
+      style={{
+        padding: '10px 16px',
+        background: 'var(--bg-card)',
+        borderBottom: '1px solid var(--border-color)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--text-main)' }}>Dreaming Girl</span>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            onClick={() => onTabChange('chat')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '5px 10px',
+              borderRadius: 'var(--card-radius)',
+              background: currentTab === 'chat' ? 'var(--bubble-sent)' : 'transparent',
+              border: '1px solid var(--border-color)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              color: 'var(--text-main)'
+            }}
+          >
+            <MessageSquare size={13} /> 对话
+          </button>
+          <button
+            onClick={() => onTabChange('flashcards')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '5px 10px',
+              borderRadius: 'var(--card-radius)',
+              background: currentTab === 'flashcards' ? 'var(--bubble-sent)' : 'transparent',
+              border: '1px solid var(--border-color)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              color: 'var(--text-main)'
+            }}
+          >
+            <BookOpen size={13} /> 词书
+          </button>
         </div>
-      </header>
+      </div>
 
-      {/* Mobile Navigation */}
-      {!hideMobileNav && <nav className={`md:hidden fixed bottom-0 w-full ${theme === 'kkt' ? 'bg-[#b2c7d9]/95 border-[#9bbbd4]' : theme === 'wechat' ? 'bg-[#EDEDED]/95 border-[#D5D5D5]' : 'bg-transparent border-transparent'} backdrop-blur-md border-t px-6 py-2 pb-safe flex justify-between items-center z-40`}>
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button
+          onClick={onOpenSelectModal}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 10px',
+            borderRadius: 'var(--card-radius)',
+            background: 'var(--bg-primary)',
+            border: '1px solid var(--border-color)',
+            fontSize: '12px',
+            cursor: 'pointer',
+            color: 'var(--text-main)'
+          }}
+        >
+          {avatarSrc ? (
+            <img src={avatarSrc} alt={nameText} style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
+            <Users size={13} />
+          )}
+          <span>{nameText}</span>
+        </button>
+
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {themes.map((t) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center gap-1 p-2 w-16 transition-all duration-200 ${
-                isActive ? 'text-[#3E2723]' : 'text-stone-400 hover:text-stone-600'
-              }`}
+              key={t.key}
+              onClick={() => onThemeChange(t.key)}
+              style={{
+                padding: '4px 8px',
+                borderRadius: 'var(--card-radius)',
+                border: `1px solid ${currentTheme === t.key ? 'var(--text-main)' : 'var(--border-color)'}`,
+                background: 'var(--bg-card)',
+                color: 'var(--text-main)',
+                fontSize: '11px',
+                fontWeight: currentTheme === t.key ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
             >
-              <div className={`relative transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100'}`}>
-                <tab.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-              </div>
-              <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>{tab.label}</span>
+              {t.name}
             </button>
-          );
-        })}
-      </nav>}
-    </>
+          ))}
+        </div>
+      </div>
+    </header>
   );
 };
